@@ -1,3 +1,5 @@
+
+from agent import getDocumentCharged 
 import os
 import gradio as gr
 
@@ -12,17 +14,19 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
 
 
+
 local_llm = "zephyr-7b-alpha.Q5_K_S.gguf"
 
 config = {
-    'max_new_tokens': 1024,
+    'max_new_tokens': 512,
     'repetition_penalty': 1.1,
     'temperature': 0,
     'top_k': 20,
     'top_p': 0.9,
-    'stream': True,
+    'stream': False,
     'threads': int(os.cpu_count() / 2)
 }
+
 
 llm = CTransformers(
     model=local_llm,
@@ -33,26 +37,18 @@ llm = CTransformers(
 
 print("LLM Initialized...")
 
-def format_prompt(context: str, question: str) -> str:
-    if "getDocumentCharged" in question:
-        num_files = getDocumentCharged("./md")
-        return f"Contexto: {context}\nPregunta: {question}\n\nNúmero de archivos cargados: {num_files}"
-    else:
-        return f"Contexto: {context}\nPregunta: {question}\n\nRespuesta útil:"
 
 prompt_template = """Utiliza la siguiente información para responder a la pregunta del usuario.
 Si no sabes la respuesta, di simplemente que no la sabes, no intentes inventarte una respuesta.
 
-{formatted_prompt}
+Contexto: {context}
+Pregunta: {question}
+
+Devuelve sólo la respuesta útil que aparece a continuación y nada más.
+Responde solo y exclusivamente con la información que se te ha sido proporcionada.
+Responde siempre en castellano.
+Respuesta útil:
 """
-
-prompt = PromptTemplate(template=prompt_template,
-                        input_variables=['context', 'question'])
-
-# Format the prompt based on the keyword
-formatted_prompt = format_prompt("Contexto de ejemplo", "¿Cuántos archivos hay en la carpeta?")
-prompt_output = prompt.format(context="Contexto de ejemplo", question="¿Cuántos archivos hay en la carpeta?", formatted_prompt=formatted_prompt)
-
 
 model_name = "BAAI/bge-large-en"
 model_kwargs = {'device': 'cpu'}
@@ -64,21 +60,29 @@ embeddings = HuggingFaceBgeEmbeddings(
 )
 
 
+
+prompt = PromptTemplate(template=prompt_template,
+                        input_variables=['context', 'question'])
 load_vector_store = Chroma(
     persist_directory="stores/ConserGPT/", embedding_function=embeddings)
 retriever = load_vector_store.as_retriever(search_kwargs={"k": 1})
 
-chain_type_kwargs = {"prompt": prompt}
+print("######################################################################")
+
+sample_prompts = ["En caso de empate entre el alumnado de alguna especialidad de la enseñanza profesionales de música, ¿Qué criterios se aplicarían para dar el premio?",
+                  "¿Qué requisitos debe reunir un alumno candidato al premio extraordinario de enseñanzas profesionales de música?", "¿Cuál es la fecha de publicación en el BOE de la Orden ECD/1611/2015, del 29 de julio, del Ministerio de Educación, Cultura y Deporte?"]
 
 
 def get_response(input):
-    query = input
-    chain_type_kwargs = {"prompt": prompt}
-    qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever,
-                                     return_source_documents=True, chain_type_kwargs=chain_type_kwargs, verbose=True)
-    response = qa(query)
-    return response["result"]
-
+    if "archivos" in input:
+        return getDocumentCharged("./md_folder")
+    else:
+        query = input
+        chain_type_kwargs = {"prompt": prompt}
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever,
+                                         return_source_documents=True, chain_type_kwargs=chain_type_kwargs, verbose=True)
+        response = qa(query)
+        return response["result"]
 
 input = gr.Text(
     label="Prompt",
@@ -93,6 +97,7 @@ iface = gr.Interface(fn=get_response,
                      outputs="text",
                      title="ConserGPT",
                      description="This is a RAG implementation based on Zephyr 7B Alpha LLM.",
+                     examples=sample_prompts,
                      allow_flagging='never'
                      )
 

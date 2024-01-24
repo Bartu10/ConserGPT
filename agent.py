@@ -2,11 +2,9 @@ from langchain.agents import tool
 import os
 
 @tool
-def getDocumentCharged(carpeta:str)->int:
+def getDocumentCharged(carpeta):
     """Devuelve el numero de archivos cargados."""
     listFiles = os.listdir(carpeta)
-    print(listFiles)
-    return len(listFiles)
+    numFiles = len(listFiles) 
+    return f"Hay cargados {numFiles} archivos"
 
-
-print(getDocumentCharged("./md"))
