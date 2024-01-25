@@ -73,7 +73,11 @@ sample_prompts = ["En caso de empate entre el alumnado de alguna especialidad de
                   "¿Qué requisitos debe reunir un alumno candidato al premio extraordinario de enseñanzas profesionales de música?", "¿Cuál es la fecha de publicación en el BOE de la Orden ECD/1611/2015, del 29 de julio, del Ministerio de Educación, Cultura y Deporte?"]
 
 
+history = []
+
+
 def get_response(input):
+
     if "archivos" in input:
         return getDocumentCharged("./md_folder")
     else:
@@ -82,6 +86,8 @@ def get_response(input):
         qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever,
                                          return_source_documents=True, chain_type_kwargs=chain_type_kwargs, verbose=True)
         response = qa(query)
+
+
         return response["result"]
 
 input = gr.Text(
