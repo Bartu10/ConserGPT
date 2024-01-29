@@ -17,8 +17,8 @@ from langchain.embeddings import HuggingFaceBgeEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.document_loaders import PyPDFLoader
 
-from agent import getDocumentCharged 
-
+from agent import getDocumentCharged
+from langchain_openai import ChatOpenAI
 from langfuse.callback import CallbackHandler
 
 
@@ -34,13 +34,18 @@ handler = CallbackHandler(LANGFUSE_PUBLIC_API_KEY, LANGFUSE_PRIVATE_API_KEY)
 
 
 
-model = Together(
-    model="mistralai/Mixtral-8x7B-Instruct-v0.1",
-    temperature=0,
-    max_tokens=1024,
-    top_k=20,
-    together_api_key=TOGETHER_API_KEY
-)
+model = ChatOpenAI(
+     model="mistralai/Mixtral-8x7B-Instruct-v0.1",
+     temperature=0,
+     max_tokens=1024,
+     openai_api_key=TOGETHER_API_KEY,
+     base_url='https://api.together.xyz',
+     callbacks=[handler]
+     ) 
+     
+# model = Together(
+
+# )
 
 embeddings = HuggingFaceBgeEmbeddings(
     model_name="BAAI/bge-large-en",
@@ -72,7 +77,7 @@ Respuesta útil:"""
 prompt = ChatPromptTemplate.from_template(template) 
 
 chain = (
-    {"context": retriever, "question": RunnablePassthrough(), "ShowDocu": RunnableLambda(getDocumentCharged) }
+    {"context": retriever, "question": RunnablePassthrough(), "ShowDocu": RunnableLambda(getDocumentCharged)}
     | prompt
     | model
     | StrOutputParser()
@@ -80,8 +85,7 @@ chain = (
 
 def get_response(input):
     query = input
-    output = chain.invoke(query,config={"callbacks":[handler]} )
-    
+    output = chain.invoke(query)
     return output
 
 input = gr.Text(
@@ -91,6 +95,8 @@ input = gr.Text(
     placeholder="Enter your prompt",
     container=False,
 )
+
+
 
 iface = gr.Interface(fn=get_response,
                      inputs=input,
