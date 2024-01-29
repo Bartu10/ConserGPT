@@ -19,10 +19,20 @@ from langchain.document_loaders import PyPDFLoader
 
 from agent import getDocumentCharged 
 
+from langfuse.callback import CallbackHandler
+
+
 # Carga las variables de entorno desde el archivo .env
 load_dotenv()
 # Accede a la API key utilizando os.environ
 TOGETHER_API_KEY = os.environ.get("TOGETHER_API_KEY")
+LANGFUSE_PRIVATE_API_KEY = os.environ.get("LANGUFUSE_PRIVATE_API_KEY")
+LANGFUSE_PUBLIC_API_KEY = os.environ.get("LANGUFUSE_PUBLIC_API_KEY")
+
+
+handler = CallbackHandler(LANGFUSE_PUBLIC_API_KEY, LANGFUSE_PRIVATE_API_KEY)
+
+
 
 model = Together(
     model="mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -70,7 +80,7 @@ chain = (
 
 def get_response(input):
     query = input
-    output = chain.invoke(query)
+    output = chain.invoke(query,config={"callbacks":[handler]} )
     
     return output
 
