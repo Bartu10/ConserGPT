@@ -26,8 +26,8 @@ from langfuse.callback import CallbackHandler
 load_dotenv()
 # Accede a la API key utilizando os.environ
 TOGETHER_API_KEY = os.environ.get("TOGETHER_API_KEY")
-LANGFUSE_PRIVATE_API_KEY = os.environ.get("LANGUFUSE_PRIVATE_API_KEY")
-LANGFUSE_PUBLIC_API_KEY = os.environ.get("LANGUFUSE_PUBLIC_API_KEY")
+LANGFUSE_PRIVATE_API_KEY = os.environ.get("LANGFUSE_PRIVATE_API_KEY")
+LANGFUSE_PUBLIC_API_KEY = os.environ.get("LANGFUSE_PUBLIC_API_KEY")
 
 
 handler = CallbackHandler(LANGFUSE_PUBLIC_API_KEY, LANGFUSE_PRIVATE_API_KEY)
