@@ -61,13 +61,14 @@ for filename in os.listdir(mdToIngest_path):
         continue
 
 try:
+    time.sleep(5)
     # Eliminar la carpeta y su contenido
-    shutil.rmtree(md_folder_path)
+    shutil.rmtree(mdToIngest_path)
 
     # Crear la carpeta nuevamente
-    os.mkdir(md_folder)
+    os.mkdir("mdToIngest")
 
-    print(f'Carpeta {md_folder} eliminada y recreada exitosamente.')
+    print(f'Carpeta {mdToIngest_path} eliminada y recreada exitosamente.')
 
 except Exception as e:
     print(f'Ocurrió un error: {e}')
