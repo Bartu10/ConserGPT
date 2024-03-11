@@ -21,6 +21,7 @@ from agent import getDocumentCharged
 from langchain_openai import ChatOpenAI
 from langfuse.callback import CallbackHandler
 
+from ingest import procesar_archivos
 
 # Carga las variables de entorno desde el archivo .env
 load_dotenv()
@@ -53,7 +54,8 @@ embeddings = HuggingFaceBgeEmbeddings(
     encode_kwargs = {'normalize_embeddings': False}
 )
 
-# ShowDocu = 
+
+
 
 load_vector_store = Chroma(
     persist_directory="stores/ConserGPT/", embedding_function=embeddings)
